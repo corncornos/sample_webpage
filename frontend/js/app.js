@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://car-inventory-backend-sample-webpage-ce14.onrender.com';;
 let token = localStorage.getItem('token');
 let currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 let vehicleModal, saleModal, userModal;
