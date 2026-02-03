@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Inventory Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Login Modal (shown on page load) -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <div class="text-center mb-4">
+                <i class="fas fa-car" style="font-size: 48px; color: #007bff;"></i>
+                <h2 class="mt-2">Car Inventory System</h2>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Login</button>
+                <small class="d-block mt-3 text-muted">
+                    Demo: admin@cardealer.com / admin123<br>
+                    or staff@cardealer.com / staff123
+                </small>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (hidden initially) -->
+    <div id="dashboardContainer" class="dashboard-container" style="display: none;">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#"><i class="fas fa-car"></i> Car Inventory</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto" >
+                        <li class="nav-item">
+                            <button class="btn btn-sm btn-outline-light" onclick="showTab('dashboard')">Dashboard</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="btn btn-sm btn-outline-light" onclick="showTab('vehicles')">Inventory</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="btn btn-sm btn-outline-light" onclick="showTab('sales')">Sales</button>
+                        </li>
+                        <li class="nav-item" id="adminMenuLi" style="display: none;">
+                            <button class="btn btn-sm btn-outline-light" onclick="showTab('users')">Users</button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="btn btn-sm btn-danger" onclick="handleLogout()">Logout</button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid p-4">
+            <!-- Dashboard Tab -->
+            <div id="dashboardTab" class="tab-content">
+                <h2 class="mb-4">Dashboard</h2>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-primary">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Vehicles</h5>
+                                <h3 id="totalCars">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-success">
+                            <div class="card-body">
+                                <h5 class="card-title">Available</h5>
+                                <h3 id="availableCars">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-info">
+                            <div class="card-body">
+                                <h5 class="card-title">Sold</h5>
+                                <h3 id="soldCars">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-white bg-warning">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Sales</h5>
+                                <h3 id="totalSales">₹0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Inventory Value</h5>
+                            </div>
+                            <div class="card-body">
+                                <h4 id="inventoryValue">₹0</h4>
+                                <small class="text-muted">Total value of available vehicles</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Recent Sales</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped" id="recentSalesTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Stock #</th>
+                                            <th>Vehicle</th>
+                                            <th>Buyer</th>
+                                            <th>Sale Price</th>
+                                            <th>Sale Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vehicles Tab -->
+            <div id="vehiclesTab" class="tab-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Vehicle Inventory</h2>
+                    <button class="btn btn-primary" onclick="showAddVehicleModal()">
+                        <i class="fas fa-plus"></i> Add Vehicle
+                    </button>
+                </div>
+
+                <!-- Search & Filter -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="filterBrand" placeholder="Brand" onchange="filterVehicles()">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control" id="filterModel" placeholder="Model" onchange="filterVehicles()">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="number" class="form-control" id="filterYear" placeholder="Year" onchange="filterVehicles()">
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-control" id="filterStatus" onchange="filterVehicles()">
+                                    <option value="">All Status</option>
+                                    <option value="Available">Available</option>
+                                    <option value="Reserved">Reserved</option>
+                                    <option value="Sold">Sold</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-control" id="sortBy" onchange="filterVehicles()">
+                                    <option value="">Sort By</option>
+                                    <option value="date">Date (Recent)</option>
+                                    <option value="price">Price (Low to High)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-secondary w-100" onclick="resetFilters()">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicles Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover" id="vehiclesTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Stock #</th>
+                                <th>Brand</th>
+                                <th>Model</th>
+                                <th>Year</th>
+                                <th>Color</th>
+                                <th>Status</th>
+                                <th>Purchase Price</th>
+                                <th>Selling Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sales Tab -->
+            <div id="salesTab" class="tab-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Sales Record</h2>
+                    <button class="btn btn-success" onclick="showRecordSaleModal()">
+                        <i class="fas fa-plus"></i> Record Sale
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="salesTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Stock #</th>
+                                <th>Vehicle</th>
+                                <th>Buyer Name</th>
+                                <th>Sale Price</th>
+                                <th>Payment Method</th>
+                                <th>Sale Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Users Tab (Admin Only) -->
+            <div id="usersTab" class="tab-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>User Management</h2>
+                    <button class="btn btn-primary" onclick="showAddUserModal()">
+                        <i class="fas fa-plus"></i> Add User
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover" id="usersTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Vehicle Modal -->
+    <div class="modal fade" id="vehicleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="vehicleModalTitle">Add Vehicle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="vehicleForm">
+                        <input type="hidden" id="vehicleId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Stock Number *</label>
+                                <input type="text" class="form-control" id="stockNumber" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Brand *</label>
+                                <input type="text" class="form-control" id="brand" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Model *</label>
+                                <input type="text" class="form-control" id="model" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Year *</label>
+                                <input type="number" class="form-control" id="year" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Variant / Trim</label>
+                                <input type="text" class="form-control" id="variant">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Color</label>
+                                <input type="text" class="form-control" id="color">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Transmission</label>
+                                <select class="form-control" id="transmission">
+                                    <option value="Automatic">Automatic</option>
+                                    <option value="Manual">Manual</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fuel Type</label>
+                                <select class="form-control" id="fuelType">
+                                    <option value="Petrol">Petrol</option>
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                    <option value="Electric">Electric</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Mileage (km)</label>
+                                <input type="number" class="form-control" id="mileage">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Purchase Price *</label>
+                                <input type="number" class="form-control" id="purchasePrice" step="0.01" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Selling Price *</label>
+                                <input type="number" class="form-control" id="sellingPrice" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-control" id="vehicleStatus">
+                                    <option value="Available">Available</option>
+                                    <option value="Reserved">Reserved</option>
+                                    <option value="Sold">Sold</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveVehicle()">Save Vehicle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Record Sale Modal -->
+    <div class="modal fade" id="saleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Record Sale</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="saleForm">
+                        <div class="mb-3">
+                            <label class="form-label">Vehicle *</label>
+                            <select class="form-control" id="saleVehicle" required>
+                                <option value="">Select a vehicle</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Buyer Name *</label>
+                            <input type="text" class="form-control" id="buyerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Sale Price *</label>
+                            <input type="number" class="form-control" id="salePrice" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-control" id="paymentMethod">
+                                <option value="Cash">Cash</option>
+                                <option value="Financing">Financing</option>
+                                <option value="Cheque">Cheque</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="recordSale()">Record Sale</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        <div class="mb-3">
+                            <label class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="userName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="userEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password *</label>
+                            <input type="password" class="form-control" id="userPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Role *</label>
+                            <select class="form-control" id="userRole" required>
+                                <option value="staff">Staff</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addUser()">Add User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
